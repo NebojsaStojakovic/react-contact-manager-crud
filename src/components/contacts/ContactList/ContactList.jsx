@@ -4,9 +4,11 @@ import { ContactService } from "../../../services/ContactService";
 import Spinner from "../../Spinner/Spinner";
 
 const ContactList = () => {
+  const [query, setQuery] = useState({ text: "" });
   const [state, setState] = useState({
     loading: false,
     contacts: [],
+    filteredContacts: [],
     errorMessage: "",
   });
 
@@ -15,7 +17,12 @@ const ContactList = () => {
       try {
         setState({ ...state, loading: true });
         let response = await ContactService.getAllContacts();
-        setState({ ...state, loading: false, contacts: response.data });
+        setState({
+          ...state,
+          loading: false,
+          contacts: response.data,
+          filteredContacts: response.data,
+        });
       } catch (error) {
         console.log(error.message);
         setState({ ...state, loading: false, errorMessage: error.message });
@@ -24,7 +31,36 @@ const ContactList = () => {
     fetchData();
   }, []);
 
-  let { loading, contacts, errorMessage } = state;
+  const deleteContact = async (contactId) => {
+    try {
+      let response = await ContactService.deleteContact(contactId);
+      if (response) {
+        setState({ ...state, loading: true });
+        let response = await ContactService.getAllContacts();
+        setState({
+          ...state,
+          loading: false,
+          contacts: response.data,
+          filteredContacts: response.data,
+        });
+      }
+    } catch (error) {
+      console.log(error.message);
+      setState({ ...state, loading: false, errorMessage: error.message });
+    }
+  };
+
+  const searchContacts = (event) => {
+    setQuery({ ...query, text: event.target.value });
+    let theContacts = state.contacts.filter((contact) => {
+      return contact.name
+        .toLowerCase()
+        .includes(event.target.value.toLowerCase());
+    });
+    setState({ ...state, filteredContacts: theContacts });
+  };
+
+  let { loading, contacts, errorMessage, filteredContacts } = state;
 
   return (
     <>
@@ -56,6 +92,9 @@ const ContactList = () => {
                         type='text'
                         className='form-control'
                         placeholder='Search Names'
+                        name='text'
+                        value={query.text}
+                        onChange={searchContacts}
                       />
                     </div>
                   </div>
@@ -81,8 +120,8 @@ const ContactList = () => {
           <section className='contact-list'>
             <div className='container'>
               <div className='row'>
-                {contacts.length > 0 &&
-                  contacts.map((contact, index) => {
+                {filteredContacts.length > 0 &&
+                  filteredContacts.map((contact, index) => {
                     return (
                       <>
                         <div
@@ -135,7 +174,10 @@ const ContactList = () => {
                                   >
                                     <i className='fa fa-pen' />
                                   </Link>
-                                  <button className='btn btn-danger'>
+                                  <button
+                                    className='btn btn-danger'
+                                    onClick={() => deleteContact(contact.id)}
+                                  >
                                     <i className='fa fa-trash' />
                                   </button>
                                 </div>

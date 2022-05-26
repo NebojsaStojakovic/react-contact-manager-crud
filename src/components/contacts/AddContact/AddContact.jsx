@@ -149,13 +149,14 @@ const AddContact = () => {
                     <option value='' disabled>
                       Select a Group
                     </option>
-                    {groups.map((group) => {
-                      return (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      );
-                    })}
+                    {groups.length > 0 &&
+                      groups.map((group) => {
+                        return (
+                          <option key={group.id} value={group.id}>
+                            {group.name}
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
                 <div className='mb-2'>
